@@ -16,7 +16,7 @@ export class FriendRequestsController {
   constructor(private readonly friendRequestsService: FriendRequestsService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Post(':id')
+  @Get(':id')
   create(@Param('id') friendId: string, @CurrentUser('userId') userId: User) {
     return this.friendRequestsService.create(friendId,userId);
   }

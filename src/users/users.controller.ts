@@ -8,16 +8,23 @@ import {
   Delete,
   UseGuards,
   Req,
+  UseInterceptors,
+  UploadedFile,
+  Res,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { CurrentUser } from 'src/common/current_user.decorator';
+import { User } from './entities/user.entity';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { uploadProfileImageOptions } from 'src/common/file_options';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @Post('register')
   create(@Body() createUserDto: CreateUserDto) {
@@ -30,9 +37,25 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('image')
+  @UseInterceptors(FileInterceptor('image', uploadProfileImageOptions))
+  uploadImage(
+    @CurrentUser('userId') userId: User,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.usersService.uploadImage(userId, file);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get()
   findAll() {
     return this.usersService.findAll();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  profile(@CurrentUser('userId') userId: User) {
+    return this.usersService.profile(userId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -41,9 +64,10 @@ export class UsersController {
     return this.usersService.findByEmailOrName(body.search.toString());
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  findOne(@Param('id') id: string, @CurrentUser('userId') userId: User) {
+    return this.usersService.findOne(+id, userId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -55,5 +79,10 @@ export class UsersController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
+  }
+
+  @Get('image/:imgpath')
+  seeUploadedFile(@Param('imgpath') image: string, @Res() res) {
+    return res.sendFile(image, { root: './assets/images/profile' });
   }
 }

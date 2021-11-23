@@ -26,6 +26,12 @@ export class FriendsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get()
+  findAll(@CurrentUser('userId') userId: User) {
+    return this.friendsService.findAll(userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('friend')
   findOne(@CurrentUser('userId') userId: User, @Body() body: string) {
     return this.friendsService.findOne(userId, body.search.toString());

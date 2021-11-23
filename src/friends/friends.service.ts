@@ -20,9 +20,13 @@ export class FriendsService {
       const user = await this.userRepo.findOne(userId, {
         relations: ['friends'],
       });
-      const friend = await this.userRepo.findOne(friendId);
+      const friend = await this.userRepo.findOne(friendId, {
+        relations: ['friends'],
+      });
       user.friends = [...user.friends, friend];
+      friend.friends = [...friend.friends, user];
       await this.userRepo.save(user);
+      await this.userRepo.save(friend);
       await this.friendReqService.removeAll(friendId, userId);
       return {
         message: 'success add friend',
@@ -33,23 +37,35 @@ export class FriendsService {
   }
 
   async findAll(userId) {
-    const user = await this.userRepo.findOne(userId, {
-      relations: ['friends'],
-    });
-    return {
-      message: 'success getting all friends',
-      count: user.friends.length,
-      friends: user.friends,
-    };
+    const friends = await this.userRepo
+      .createQueryBuilder('user')
+      .where({ id: userId })
+      .leftJoinAndSelect('user.friends', 'friends')
+      .select(['friends.id', 'friends.email', 'friends.name', 'friends.image'])
+      .getRawMany();
+
+    if (friends[0].friends_id !== null) {
+      return {
+        message: 'success getting all friends',
+        count: friends.length,
+        friends,
+      };
+    } else {
+      return {
+        message: 'no friends yet',
+        count: 0,
+        friends: [],
+      };
+    }
   }
 
-  async findOne(userId, emailOrName: string): Promise<{ message: string; search: any[]; }> {
+  async findOne(userId, emailOrName: string) {
     let result = [];
     let friends = await this.findAll(userId);
     friends.friends.forEach((friend) => {
       if (
-        friend.email.includes(emailOrName) ||
-        friend.name.includes(emailOrName)
+        friend.friends_email.includes(emailOrName) ||
+        friend.friends_name.includes(emailOrName)
       ) {
         result.push(friend);
       }
@@ -57,22 +73,20 @@ export class FriendsService {
 
     return {
       message: 'search for friend',
-      search: result,
+      search_result: result,
     };
   }
 
   async remove(friendId, userId) {
-    let result = [];
-    const user = await this.userRepo.findOne(userId, { relations: ["friends"] })
-    user.friends.forEach((friend) => {
-      if (friend.id !== friendId) {
-        result.push(friend)
-      }
-    });
-    user.friends = result;
-    this.userRepo.save(user);
+    const user = await this.userRepo
+      .createQueryBuilder()
+      .relation(User, 'friends')
+      .of([userId, friendId])
+      .remove([friendId, userId]);
+
     return {
-      message: "success deleting friend"
-    }
+      message: 'success deleting friend',
+      user,
+    };
   }
 }

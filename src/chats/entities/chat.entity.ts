@@ -7,12 +7,19 @@ import {
     ManyToOne,
     JoinColumn,
     Column,
+    UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
 export class Chat {
     @PrimaryGeneratedColumn()
     id: number;
+
+    @Column({ type: "text", default: "start new message", collation: "utf8mb4_bin" })
+    last_messaeg: string
+
+    @UpdateDateColumn()
+    last_messaeg_created_at: Date
 
     @Column({ default: 0 })
     user_one_hide_chat: number
@@ -35,7 +42,8 @@ export class Chat {
     user2: User;
 
     @OneToMany(() => Message, (message) => message.chat, {
-        cascade: true
+        cascade: true,
+
     })
     message: Message[];
 }

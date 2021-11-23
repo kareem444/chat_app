@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnsupportedMediaTypeException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthService } from 'src/auth/auth.service';
 import { Like, Repository } from 'typeorm';
@@ -12,7 +17,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     private readonly authService: AuthService,
-  ) { }
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     const user = await this.findByEmail(createUserDto.email);
@@ -38,18 +43,41 @@ export class UsersService {
   async login(loginUserDto: LoginUserDto) {
     const user = await this.findByEmail(loginUserDto.email);
     if (user.length >= 1) {
-      const isMatch = this.authService.checkValidatedPassword(
+      const isMatch = await this.authService.checkValidatedPassword(
         loginUserDto.password,
         user[0].password.toString(),
       );
       if (isMatch) {
         return this.authService.login(user[0]);
       } else {
-        throw new HttpException('Login Faild', HttpStatus.UNAUTHORIZED);
+        throw new HttpException(
+          'check email or password again',
+          HttpStatus.UNAUTHORIZED,
+        );
       }
     } else {
       throw new HttpException('This Email Is Not Exist', HttpStatus.NOT_FOUND);
     }
+  }
+
+  async uploadImage(userId, file: Express.Multer.File) {
+    const upload = await this.userRepository.update(
+      { id: userId },
+      {
+        image: file.filename,
+      },
+    );
+    if (upload.affected === 1) {
+      return { message: 'success updating profile pic', image: file.filename };
+    } else {
+      throw new UnsupportedMediaTypeException();
+    }
+  }
+
+  async profile(userId) {
+    return await this.userRepository.findOneOrFail(userId, {
+      select: ['id', 'email', 'name', 'image'],
+    });
   }
 
   async findAll(): Promise<User[]> {
@@ -57,21 +85,89 @@ export class UsersService {
   }
 
   async findByEmailOrName(emailOrName: string): Promise<any> {
-    return await this.userRepository.find({
-      where: [
-        { name: Like(`%${emailOrName}%`) },
-        { email: Like(`%${emailOrName}%`) },
-      ],
-      take: 10,
-    });
+    if (emailOrName.length > 0) {
+      return await this.userRepository.find({
+        where: [
+          { name: Like(`%${emailOrName}%`) },
+          { email: Like(`%${emailOrName}%`) },
+        ],
+        take: 10,
+      });
+    } else {
+      return [];
+    }
   }
 
   async findByEmail(email: string): Promise<any> {
     return await this.userRepository.find({ where: { email: email } });
   }
 
-  async findOne(id: number): Promise<User> {
-    return await this.userRepository.findOne(id);
+  async findOne(id: number, userId) {
+    let friend: boolean = false;
+    let friendRequestToMe: boolean = false;
+    let friendRequestForHim: boolean = false;
+    let friendRequestToMeId;
+    let friendRequestForHimId;
+
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .where({ id: id })
+      .leftJoinAndSelect('user.friends', 'friends')
+      .leftJoinAndSelect('user.friendRequestUserFrom', 'friendRequestUserFrom')
+      .leftJoinAndSelect('user.friendRequestUserTo', 'friendRequestUserTo')
+      .select([
+        'user.id',
+        'user.name',
+        'user.email',
+        'user.image',
+        'friends.id',
+        'friends.name',
+        'friends.email',
+        'friends.image',
+        'friendRequestUserFrom.id',
+        'friendRequestUserFrom.user_to',
+        'friendRequestUserTo.id',
+        'friendRequestUserTo.user_from',
+      ])
+      .getOne();
+
+    for (let index = 0; index < user.friends.length; index++) {
+      const element = user.friends[index];
+      if (element.id === userId) {
+        friend = true;
+        break;
+      }
+    }
+    for (let index = 0; index < user.friendRequestUserFrom.length; index++) {
+      const element = user.friendRequestUserFrom[index];
+      if (element.user_to === userId) {
+        friendRequestToMe = true;
+        friendRequestToMeId = element.id;
+        break;
+      }
+    }
+    for (let index = 0; index < user.friendRequestUserTo.length; index++) {
+      const element = user.friendRequestUserTo[index];
+      if (element.user_from === userId) {
+        friendRequestForHim = true;
+        friendRequestForHimId = element.id;
+        break;
+      }
+    }
+
+    return {
+      friend,
+      friendRequestToMe,
+      friendRequestForHim,
+      friendRequestToMeId,
+      friendRequestForHimId,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        image: user.image,
+      },
+    };
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {

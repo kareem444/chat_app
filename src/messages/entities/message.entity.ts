@@ -4,6 +4,7 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -13,10 +14,17 @@ export class Message {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ type: 'text' })
+    @Column({ type: 'text', collation: "utf8mb4_bin", nullable: true })
     content: String;
 
+    @Column({ nullable: true })
+    image: String;
+
+    @Column({ name: 'userId' })
+    userId: number;
+
     @ManyToOne(() => User, (user) => user.messages)
+    @JoinColumn({ name: 'userId' })
     user: User;
 
     @ManyToOne(() => Chat, (chat) => chat.message)

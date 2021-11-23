@@ -36,10 +36,10 @@ export class User {
     @OneToMany(() => Chat, (chat) => chat.user_two)
     chatsUserTwo: Chat[];
 
-    @OneToMany(() => FriendRequest, (friendRequest) => friendRequest.user_from)
+    @OneToMany(() => FriendRequest, (friendRequest) => friendRequest.userFrom)
     friendRequestUserFrom: FriendRequest[];
 
-    @OneToMany(() => FriendRequest, (friendRequest) => friendRequest.user_to)
+    @OneToMany(() => FriendRequest, (friendRequest) => friendRequest.userTo)
     friendRequestUserTo: FriendRequest[];
 
     @ManyToMany(() => User)
