@@ -52,7 +52,7 @@ export class UsersService {
       } else {
         throw new HttpException(
           'check email or password again',
-          HttpStatus.UNAUTHORIZED,
+          HttpStatus.NOT_FOUND,
         );
       }
     } else {
