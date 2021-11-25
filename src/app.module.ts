@@ -30,6 +30,7 @@ import { FriendRequestsModule } from './friend-requests/friend-requests.module';
       },
       entities: ["dist/**/*.entity{.ts,.js}"],
       synchronize: true,
+      
     }),
     UsersModule,
     AuthModule,
