@@ -13,12 +13,21 @@ import { FriendRequestsModule } from './friend-requests/friend-requests.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'localhost',
-      port: 3306,
-      username: 'root',
-      password: '',
-      database: 'chat',
+      type: 'postgres',
+      host: 'ec2-34-194-25-190.compute-1.amazonaws.com',
+      port: 5432,
+      username: 'efgsbvgbyxgfgw',
+      password: '3558220b5a606da29d88e00ae76b79457f80f41e8fa84ff80f4a179d50688c3d',
+      database: 'da5rgloqe3ka7n',
+      // type: 'mysql',
+      // host: 'localhost',
+      // port: 3306,
+      // username: 'root',
+      // password: '',
+      // database: 'chat',
+      ssl: {
+        rejectUnauthorized: false,
+      },
       entities: ["dist/**/*.entity{.ts,.js}"],
       synchronize: true,
     }),

@@ -15,7 +15,8 @@ export class Chat {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ type: "text", default: "start new message", collation: "utf8mb4_bin" })
+    // @Column({ type: "text", default: "start new message", collation: "utf8mb4_bin" }) for mysql emoji type
+    @Column({ type: "text", default: "start new message" })
     last_messaeg: string
 
     @UpdateDateColumn()

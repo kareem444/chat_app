@@ -14,7 +14,8 @@ export class Message {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ type: 'text', collation: "utf8mb4_bin", nullable: true })
+    // @Column({ type: 'text', collation: "utf8mb4_bin", nullable: true }) for mysql emoji type
+    @Column({ type: 'text', nullable: true })
     content: String;
 
     @Column({ nullable: true })
