@@ -37,7 +37,7 @@ export class EventsGateway
 
     @SubscribeMessage('chat')
     refreshChatList(client: Socket, data: any) {
-        this.server.emit('chat', data);
+        this.server.to(data['email']).emit('chat', data);
         console.log(data);
     }
 
