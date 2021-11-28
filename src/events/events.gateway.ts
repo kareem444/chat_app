@@ -35,6 +35,12 @@ export class EventsGateway
         console.log(data);
     }
 
+    @SubscribeMessage('chat')
+    refreshChatList(client: Socket, data: any) {
+        this.server.emit('chat', data);
+        console.log(data);
+    }
+
     afterInit(server: Server) {
         console.log('init');
     }
