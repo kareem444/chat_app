@@ -10,7 +10,6 @@ import { MessagesModule } from './messages/messages.module';
 import { FriendsModule } from './friends/friends.module';
 import { FriendRequestsModule } from './friend-requests/friend-requests.module';
 import { EventsModule } from './events/events.module';
-import { EventsGateway } from './events/events.gateway';
 
 @Module({
   imports: [

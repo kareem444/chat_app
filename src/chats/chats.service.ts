@@ -105,9 +105,11 @@ export class ChatsService {
         'chat.last_messaeg_created_at',
         'user1.id',
         'user1.name',
+        'user1.email',
         'user1.image',
         'user2.id',
         'user2.name',
+        'user2.email',
         'user2.image',
       ])
       .orderBy('message.created_at', 'DESC')
